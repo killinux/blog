@@ -3,7 +3,7 @@ blog
 笔记，怎么使用markdown
 http://wowubuntu.com/markdown/
 `
->public static void main(String args[]){
->System.out.println("haa");
->}
+<code>public static void main(String args[]){<br>
+  System.out.println("haa");
+<br>}<code>
 `
