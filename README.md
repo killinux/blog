@@ -1,6 +1,6 @@
-blog
-====
-笔记，怎么使用markdown
+===标题(h3)
+> hello, 笔记，怎么使用markdown
+
 [markdown用法](http://wowubuntu.com/markdown/ "Title") 
 
 ```java
