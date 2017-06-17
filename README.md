@@ -10,12 +10,6 @@ class Demo{
     }
 }
 ```
-<pre><code>
-class Demo{
-    public static void main(String args[]){
-        System.out.println("haa");
-    }
-}
-</code>
-</pre>
-<img src="http://www.iteye.com/upload/logo/user/779445/d1c08d0f-16ed-375b-882f-e5364066058a.jpg?1355498187"></img>
+
+***
+哈哈
