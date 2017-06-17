@@ -1,4 +1,4 @@
-安装
+安装  
 http://www.cnblogs.com/wang2650/p/5473881.html
 
 wget https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip
