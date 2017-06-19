@@ -237,7 +237,7 @@ while True:
 # in another process
 c.kv.put('foo', 'bar')
 ```
-###基本使用###
+###基本使用###  
 curl -v 是显示详细， -s是只显示结果
 设置值
 curl --request PUT --data "hello" http://localhost:8500/v1/kv/my-key
