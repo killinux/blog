@@ -1,9 +1,11 @@
-安装  
-http://www.cnblogs.com/wang2650/p/5473881.html
+#安装  
+[centos7上consul的安装](http://www.cnblogs.com/wang2650/p/5473881.html)
 
 wget https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip  
 consul -v
-
+json格式化
+yum -y install epel-release  
+yum install jq -y  
 
 consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n1 -bind=192.168.139.194 -dc=dc1  
 consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.218 -dc=dc1  
@@ -19,24 +21,24 @@ consul join 192.168.139.218
 如果发现集群有问题，就 rm -rf /tmp/consul 
 mkdir /tmp/consul 
 #####################################
-http://blog.csdn.net/viewcode/article/details/45915179
-http://www.codeweblog.com/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E7%B3%BB%E7%BB%9Fconsul%E4%BB%8B%E7%BB%8D/
-例子1
+[consul入门](http://blog.csdn.net/viewcode/article/details/45915179)
+[服务发现系统consul介绍](http://www.codeweblog.com/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E7%B3%BB%E7%BB%9Fconsul%E4%BB%8B%E7%BB%8D/)
+#例子1
 mkdir /etc/consul.d/
-echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}'  >/etc/consul.d/web.json
-consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul  -bind=192.168.139.218 -config-dir /etc/consul.d
+echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}'  >/etc/consul.d/web.json  
+consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul  -bind=192.168.139.218 -config-dir /etc/consul.d  
 
 dig @127.0.0.1 -p 8600 web.service.consul 
 dig @127.0.0.1 -p 8600 web.service.consul SRV
-curl http://localhost:8500/v1/catalog/service/web  | python -m json.tool
+curl http://localhost:8500/v1/catalog/service/web  |jq
 
 curl http://localhost:8500/v1/catalog/nodes |python -m json.tool
-dig @127.0.0.1 -p 8600 mcompute612.node.consul
+dig @127.0.0.1 -p 8600 mcompute616.node.consul
 
 健康检查
-echo '{"check": {"name": "ping", "script": "ping -c1 www.baidu.com >/dev/null", "interval": "30s"}}' >/etc/consul.d/ping.json
-echo '{"service": {"name": "web", "tags": ["rails"], "port": 80 ,"check": {"script": "curl localhost:80 >/dev/null 2>&1", "interval": "10s"}}}' >/etc/consul.d/web.json
-curl -s http://localhost:8500/v1/health/state/any | python -m json.tool
+echo '{"check": {"name": "ping", "script": "ping -c1 www.baidu.com >/dev/null", "interval": "30s"}}' >/etc/consul.d/ping.json  
+echo '{"service": {"name": "web", "tags": ["rails"], "port": 80 ,"check": {"script": "curl localhost:80 >/dev/null 2>&1", "interval": "10s"}}}' >/etc/consul.d/web.json  
+curl -s http://localhost:8500/v1/health/state/any | python -m json.tool  
 
 查看所有
 curl -v http://127.0.0.1:8500/v1/kv/?recurse | python -m json.tool
@@ -57,19 +59,19 @@ curl -s http://127.0.0.1:8500/v1/kv/web/key1|python -m json.tool
 
 
 
-例子2
+#例子2
 consul agent -server -bootstrap-expect 1  -data-dir /tmp/consul -node=agent-one -bind=192.168.139.218
 #consul agent -data-dir /tmp/consul -node=agent-one -bind=192.168.139.218
 consul agent -server -data-dir /tmp/consul
 consul agent -data-dir /tmp/consul -node=agent-two -bind=192.168.139.194
 consul agent -data-dir /tmp/consul -node=agent-three -bind=192.168.139.193
 
-第一个节点
+#第一个节点
 consul join 192.168.139.194  192.168.139.193
 consul members
 consul info
 
-例子3
+#例子3
 consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul  -bind=192.168.139.218 -config-dir /etc/consul.d
 consul agent -data-dir /tmp/consul -join=192.168.139.218 -bind=192.168.139.194
 
@@ -167,7 +169,7 @@ http {
 }
 ```
 tmpl.json 
-```json
+```javascript
 consul = "127.0.0.1:8500"  
 template {  
 source = "./nginx_web.ctmpl"  
@@ -175,16 +177,12 @@ destination = "/usr/local/nginx/conf/nginx.conf"
 command = "/usr/local/nginx/sbin/nginx -s reload"  
 }
 ```
-
-
-
-#################
-helloword:
+#helloword:################  
 ls
 config.ctmpl   tmpl.json
 
 tmpl.json
-```json
+```javascript
 consul = "127.0.0.1:8500"  
 template {  
 source = "./config.ctmpl"  
@@ -213,10 +211,9 @@ cat /etc/consul.d/web.json
 curl http://127.0.0.1:8500/v1/catalog/service/web|python -m json.tool
 ```
 
-###kv的例子###
+###kv的例子###  
 https://python-consul.readthedocs.io/en/latest/#consul-status  
-yum -y install epel-release  
-yum install jq -y  
+
 yum install python-virtualenv  
 virtualenv mysite  
 source mysite/bin/activate  
