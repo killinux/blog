@@ -1,17 +1,14 @@
 安装  
 http://www.cnblogs.com/wang2650/p/5473881.html
 
-wget https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip
+wget https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip  
 consul -v
 
 
-consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n1 -bind=192.168.139.194 -dc=dc1
-
-consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.218 -dc=dc1 
-
-consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.193 -dc=dc1 
-
-consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.161 -dc=dc1 
+consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n1 -bind=192.168.139.194 -dc=dc1  
+consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.218 -dc=dc1  
+consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.193 -dc=dc1  
+consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.139.161 -dc=dc1  
 
 在第一个节点上
 
@@ -117,11 +114,145 @@ consul agent -atlas-join  -atlas=ATLAS_USERNAME/infrastructure -atlas-token="YOU
  curl   https://mysql.service.consul/v1/kv/my-key
 
 
-
-
-
 ##################################
 {"service": {"name" : "test","port" : 9999,"check":{ "tcp": "127.0.0.1:9999", "interval": "10s" }} } 
+#################
+http://blog.csdn.net/daiyudong2020/article/details/53559008
+docker run -d --name=consul --net=host gliderlabs/consul-server -bootstrap -bind=192.168.0.149
+
+docker run -d  --name=registrator     --net=host   --volume=/var/run/docker.sock:/tmp/docker.sock    gliderlabs/registrator:latest consulkv://localhost:8500/hello
+
+
+consul-template -consul 127.0.0.1:8500 -template /root/nginx_web.ctmpl:/usr/local/nginx/conf/nginx.conf:"/usr/local/nginx/sbin/nginx -s reload"
+
+
+curl -X PUT -d 'test' http://localhost:8500/v1/kv/hello/hehe?flags=43
+curl -v http://localhost:8500/v1/kv/?recurse |python -m json.tool
+
+
+###nginx的例子###
+模板语言https://book-consul-guide.vnzmi.com/11_consul_template.html  
+
+删除所有
+curl -X DELETE http://127.0.0.1:8500/v1/kv/?recurse  
+curl --request PUT --data "192.168.139.161" http://localhost:8500/v1/kv/myserver/mcontroller605  
+curl --request PUT --data "192.168.139.193" http://localhost:8500/v1/kv/myserver/mcompute605  
+curl -s http://localhost:8500/v1/kv/myserver?recurse | jq  
+
+consul-template -consul-addr 127.0.0.1:8500 -template /root/nginx_web.ctmpl:/usr/local/nginx/conf/nginx.conf:"/usr/local/nginx/sbin/nginx -s reload" -once
+consul-template -config ./tmpl.json -once  
+
+nginx_web.ctmpl
+```go
+worker_processes  1;
+events {
+    worker_connections  1024;
+}
+http {
+    include     mime.types;
+    default_type  application/octet-stream;
+    sendfile    on;
+    keepalive_timeout  65;
+    upstream app {
+        {{range ls "myserver/" }}
+        server {{.Value}} weight=5;{{end}}
+    }
+    server {
+          listen       80;
+          server_name  localhost; 
+          location / {
+            proxy_pass http://app;
+          }
+    }
+}
+```
+tmpl.json 
+```json
+consul = "127.0.0.1:8500"  
+template {  
+source = "./nginx_web.ctmpl"  
+destination = "/usr/local/nginx/conf/nginx.conf"  
+command = "/usr/local/nginx/sbin/nginx -s reload"  
+}
+```
+
+
+
+#################
+helloword:
+ls
+config.ctmpl   tmpl.json
+
+tmpl.json
+```json
+consul = "127.0.0.1:8500"  
+template {  
+source = "./config.ctmpl"  
+destination = "./config.py"  
+command = "python ./config.py"  
+}
+···
+config.ctmpl
+```python
+#!/usr/bin/python  
+#coding:utf-8  
+  
+#bottle  
+iplist = [ {{range service "web"}} "{{.Address}}",{{end}} ]  
+port = 8080  
+  
+for ip in iplist:  
+    print ip 
+```
+consul-template -config ./tmpl.json -once  
+生成config.py
+```shell
+cat /etc/consul.d/web.json 
+{"service": {"name": "web", "tags": ["rails"], "port": 80 ,"check": {"script": "curl localhost:80", "interval": "10s"}}}
+
+curl http://127.0.0.1:8500/v1/catalog/service/web|python -m json.tool
+```
+
+###kv的例子###
+https://python-consul.readthedocs.io/en/latest/#consul-status  
+yum -y install epel-release  
+yum install jq -y  
+yum install python-virtualenv  
+virtualenv mysite  
+source mysite/bin/activate  
+pip install python-consul  
+
+a.py  
+```python
+import consul
+
+c = consul.Consul()
+
+# poll a key for updates
+index = None
+while True:
+    index, data = c.kv.get('foo', index=index)
+    print data['Value']
+
+# in another process
+c.kv.put('foo', 'bar')
+```
+###基本使用###
+curl -v 是显示详细， -s是只显示结果
+设置值
+curl --request PUT --data "hello" http://localhost:8500/v1/kv/my-key
+查所有值  
+curl -v http://localhost:8500/v1/kv/?recurse |python -m json.tool  
+查某个值
+curl -v http://localhost:8500/v1/kv/my-key |python -m json.tool   
+显示值的value
+curl -s http://127.0.0.1:8500/v1/kv/my-key| jq -r .[0]'.Value'|base64 -d  
+curl -s http://127.0.0.1:8500/v1/kv/foo| jq -r .[0]'.Value'|base64 -d  
+删除所有
+curl -X DELETE http://127.0.0.1:8500/v1/kv/?recurse
+
+
+
 
 
 
