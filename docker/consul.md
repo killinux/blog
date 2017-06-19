@@ -1,4 +1,4 @@
-# 安装  
+### 安装  
 [centos7上consul的安装](http://www.cnblogs.com/wang2650/p/5473881.html)
 
 wget https://releases.hashicorp.com/consul/0.6.4/consul_0.6.4_linux_amd64.zip  
@@ -60,19 +60,19 @@ curl -s http://127.0.0.1:8500/v1/kv/web/key1|python -m json.tool
 
 
 
-# 例子2
+### 例子2
 consul agent -server -bootstrap-expect 1  -data-dir /tmp/consul -node=agent-one -bind=192.168.139.218
 #consul agent -data-dir /tmp/consul -node=agent-one -bind=192.168.139.218
 consul agent -server -data-dir /tmp/consul
 consul agent -data-dir /tmp/consul -node=agent-two -bind=192.168.139.194
 consul agent -data-dir /tmp/consul -node=agent-three -bind=192.168.139.193
 
-#第一个节点
+第一个节点
 consul join 192.168.139.194  192.168.139.193
 consul members
 consul info
 
-# 例子3
+### 例子3
 consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul  -bind=192.168.139.218 -config-dir /etc/consul.d
 consul agent -data-dir /tmp/consul -join=192.168.139.218 -bind=192.168.139.194
 
@@ -97,11 +97,11 @@ curl http://127.0.0.1:8500/v1/catalog/service/mysql|python -m json.tool
 curl 127.0.0.1:8500/v1/catalog/nodes |python -m json.tool
 dig @127.0.0.1 -p 8600 mysql.service.consul SRV
 
-健康检查
+### 健康检查
 kill掉一个节点，consul members处于fail状态
 curl http://localhost:8500/v1/health/state/critical   
 
-K/V存储
+### K/V存储
 curl -v http://localhost:8500/v1/kv/?recurse |python -m json.tool
 curl -X PUT -d 'test' http://localhost:8500/v1/kv/mysql/key2?flags=43
 curl -X DELETE http://localhost:8500/v1/kv/mysql/key2?recurse
@@ -110,21 +110,19 @@ curl -X PUT -d 'newval' http://localhost:8500/v1/kv/mysql/key1?flags=100
 更新index：
 curl "http://localhost:8500/v1/kv/mysql/key1?index=101&wait=5s"
 
-##################################
+##################################  
 
 consul agent -atlas-join  -atlas=ATLAS_USERNAME/infrastructure -atlas-token="YOUR_ATLAS_TOKEN"
 
- curl   https://mysql.service.consul/v1/kv/my-key
+curl   https://mysql.service.consul/v1/kv/my-key
 
-
-##################################
+##################################  
 {"service": {"name" : "test","port" : 9999,"check":{ "tcp": "127.0.0.1:9999", "interval": "10s" }} } 
-#################
-http://blog.csdn.net/daiyudong2020/article/details/53559008
+#################  
+[consul-template入门篇](http://blog.csdn.net/daiyudong2020/article/details/53559008)
+
 docker run -d --name=consul --net=host gliderlabs/consul-server -bootstrap -bind=192.168.0.149
-
 docker run -d  --name=registrator     --net=host   --volume=/var/run/docker.sock:/tmp/docker.sock    gliderlabs/registrator:latest consulkv://localhost:8500/hello
-
 
 consul-template -consul 127.0.0.1:8500 -template /root/nginx_web.ctmpl:/usr/local/nginx/conf/nginx.conf:"/usr/local/nginx/sbin/nginx -s reload"
 
@@ -178,7 +176,7 @@ destination = "/usr/local/nginx/conf/nginx.conf"
 command = "/usr/local/nginx/sbin/nginx -s reload"  
 }
 ```
-# helloword: ################  
+### consul-template 的helloword:
 ls
 config.ctmpl   tmpl.json
 
