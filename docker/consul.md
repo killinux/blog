@@ -25,7 +25,7 @@ mkdir /tmp/consul
 [consul入门](http://blog.csdn.net/viewcode/article/details/45915179)
 [服务发现系统consul介绍](http://www.codeweblog.com/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0%E7%B3%BB%E7%BB%9Fconsul%E4%BB%8B%E7%BB%8D/)
 # 例子1
-mkdir /etc/consul.d/
+mkdir /etc/consul.d/  
 echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}'  >/etc/consul.d/web.json  
 consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul  -bind=192.168.139.218 -config-dir /etc/consul.d  
 
