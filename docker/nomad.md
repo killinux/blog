@@ -290,12 +290,12 @@ job "ping" {
 }
 ```
 
-nomad run ping.nomad
-nomad status
-nomad node-status
-nomad status ping
-nomad alloc-status  ae08f124
-nomad stop ping
+nomad run ping.nomad   
+nomad status   
+nomad node-status  
+nomad status ping  
+nomad alloc-status  ae08f124  
+nomad stop ping  
 
 
 
