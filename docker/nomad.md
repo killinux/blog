@@ -5,7 +5,7 @@ systemctl start docker
 systemctl enable docker
 docker pull fedora/apache 
 
- docker run -i -t fedora/apache /bin/bash 
+docker run -i -t fedora/apache /bin/bash 
 
 docker run -p 192.168.139.204:80:80 -d -i -t fedora/apache /bin/bash 
 不好用
@@ -57,7 +57,7 @@ func main() {
    fmt.Println("Hello, World!")
 }
 ```
-
+http://wiki.corp.awcloud.com/pages/viewpage.action?pageId=51512132
 
 1.简介
 Nomad是一个分布式的，高可用的，数据中心相关的，可以在任何基础设施上部署任何规模应用程序的机群管理器和调度器。
@@ -146,4 +146,156 @@ advertise {
 }
 ```
 启动client1
+nomad agent -config client1.hcl  
+
+
+
+#############consul
+echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}' >/etc/consul.d/web.json
+cat web.json |jq
+
+
+
+
+例子：
+两台机器
+192.168.139.207
+192.168.139.206
+先建consul集群，类似zookeeper
+
+[root@nomad consul.d]# cat /etc/consul.d/web.json 
+{"service": {"name": "web", "tags": ["rails"], "port": 80}}
+
+consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind=192.168.139.207 -config-dir /etc/consul.d
+
+[root@nomad nomad]# consul members
+Node   Address               Status  Type    Build  Protocol  DC
+nomad  192.168.139.207:8301  alive   server  0.6.4  2         dc1
+
+
+consul agent -data-dir /tmp/consul -node=agent-two -bind=192.168.139.206
+
+[root@nomad1 nomad]# consul members
+Node       Address               Status  Type    Build  Protocol  DC
+agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1
+
+
+在207上
+[root@nomad nomad]#  consul join 192.168.139.206
+Successfully joined cluster by contacting 1 nodes.
+[root@nomad nomad]# consul members              
+Node       Address               Status  Type    Build  Protocol  DC
+agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1
+nomad      192.168.139.207:8301  alive   server  0.6.4  2         dc1
+[root@nomad nomad]# 
+
+在207上
+
+
+
+[root@nomad nomad]# cat server.hcl 
+# Increase log verbosity
+log_level = "DEBUG"
+# Setup data dir
+data_dir = "/tmp/server1"
+# Enable the server
+server {
+    enabled = true
+    # Self-elect, should be 3 or 5 for production
+    bootstrap_expect = 1
+}
+# Advertise must be set to a non-loopback address.
+# Defaults to the resolving the local hostname.
+advertise {
+    http = "192.168.139.207"
+    rpc  = "192.168.139.207"
+    serf = "192.168.139.207"
+}
+
+nomad agent -config server.hcl
+
+启动client
+[root@nomad nomad]# cat client1.hcl 
+# client1.hcl
+# Increase log verbosity
+log_level = "DEBUG"
+# Setup data dir
+data_dir = "/tmp/client1"
+enable_debug = true
+name = "client1"
+# Enable the client
+client {
+    enabled = true
+    no_host_uuid = true
+    # For demo assume we are talking to server1. For production,
+    # this should be like "nomad.service.consul:4647" and a system
+    # like Consul used for service discovery.
+    servers = ["192.168.139.207:4647"]
+    node_class = "foo"
+    options {
+        "driver.raw_exec.enable" = "1"
+    }
+    reserved {
+       cpu = 500
+    }
+}
+# Modify our port to avoid a collision with server1
+ports {
+    http = 5656
+}
+advertise {
+  http = "192.168.139.207"
+  rpc = "192.168.139.207"
+  serf = "192.168.139.207"
+}
+
 nomad agent -config client1.hcl
+
+
+
+执行任务
+[root@nomad nomad]# cat ping.nomad 
+job "ping" {
+  # region = "global"
+  # Spread the tasks in this job between us-west-1 and us-east-1.
+  datacenters = ["dc1"]
+  # Run this job as a "service" type. Each job type has different
+  # properties. See the documentation below for more examples.
+  type = "service"
+  # Specify this job to have rolling updates, two-at-a-time, with
+  # 30 second intervals.
+  update {
+    stagger      = "1s"
+    max_parallel = 1
+  }
+  # A group defines a series of tasks that should be co-located
+  # on the same client (host). All tasks within a group will be
+  # placed on the same host.
+  group "webs" {
+    # Specify the number of these tasks we want.
+    count = 1
+    task "ping-baidu" {
+      driver = "raw_exec"
+      config {
+        command = "/usr/bin/ping"
+        args = ["www.baidu.com"]
+      }
+    }
+  }
+}
+
+nomad run ping.nomad
+nomad status
+nomad node-status
+nomad status ping
+nomad alloc-status  ae08f124
+nomad stop ping
+
+
+
+
+
+
+
+
+
