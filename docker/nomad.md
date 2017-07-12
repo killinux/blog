@@ -28,26 +28,26 @@ docker run -v /opt/share/hello:/var/log/httpd  -d -i -t -p 192.168.139.204:80:80
 docker ps
 docker exec -it 61e0dd477d28 /bin/sh
 
-可以看到docker中的/var/log/httpd 映射到本地的/opt/share/hello 
+可以看到docker中的/var/log/httpd 映射到本地的/opt/share/hello   
 可以查看apache的log了
 
-docker ps
-docker port 61e0dd477d28 80
-docker logs -f web  
+docker ps  
+docker port 61e0dd477d28 80  
+docker logs -f web    
 docker top web  
 docker inspect web  
 docker start web  
-run启动过的，之后直接start就行了，端口和挂载的目录都还在
-docker stop web 
+run启动过的，之后直接start就行了，端口和挂载的目录都还在  
+docker stop web  
 
 
 
-yum install golang -y
+yum install golang -y  
 
-安装nomad
-https://www.hashicorp.com/products/nomad/
-直接下载可执行文件
- go run hello.go
+安装nomad  
+https://www.hashicorp.com/products/nomad/  
+直接下载可执行文件  
+ go run hello.go  
 ```C
 package main
 
@@ -57,35 +57,35 @@ func main() {
    fmt.Println("Hello, World!")
 }
 ```
-http://wiki.corp.awcloud.com/pages/viewpage.action?pageId=51512132
+http://wiki.corp.awcloud.com/pages/viewpage.action?pageId=51512132  
 
-1.简介
-Nomad是一个分布式的，高可用的，数据中心相关的，可以在任何基础设施上部署任何规模应用程序的机群管理器和调度器。
-   它将机器和其上的应用程序抽象分离，代替允许用户声明想运行什么，并且让nomad来处理在什么地方以及怎么运行。
-   主要特性
-Docker Support，docker支持
-Operationally Simple，操作简单
-Multi-Datacenter and Multi-Region Aware，多数据中心多区域相关
-Flexible Workloads，灵活负载
-Built for Scale，规模可伸缩
-2.运行agent
-         agent可以server或者client模式运行，建议每个机器至少3-5个server，其他的均以client模式运行。
-   client是一个轻量级的进程，用于处理注册主机，执行心跳检测，执行server分配的各种任务。
-启动agent，nomad agent -dev，参数dev指以开发者身份运行，此时agent同时具有server和client模式。
-查看集群中节点，nomad node-status，nomad server-members
-停止agent，ctrl-c
+1.简介  
+Nomad是一个分布式的，高可用的，数据中心相关的，可以在任何基础设施上部署任何规模应用程序的机群管理器和调度器。  
+   它将机器和其上的应用程序抽象分离，代替允许用户声明想运行什么，并且让nomad来处理在什么地方以及怎么运行。  
+   主要特性  
+Docker Support，docker支持  
+Operationally Simple，操作简单  
+Multi-Datacenter and Multi-Region Aware，多数据中心多区域相关  
+Flexible Workloads，灵活负载  
+Built for Scale，规模可伸缩  
+2.运行agent  
+         agent可以server或者client模式运行，建议每个机器至少3-5个server，其他的均以client模式运行。  
+   client是一个轻量级的进程，用于处理注册主机，执行心跳检测，执行server分配的各种任务。  
+启动agent，nomad agent -dev，参数dev指以开发者身份运行，此时agent同时具有server和client模式。  
+查看集群中节点，nomad node-status，nomad server-members  
+停止agent，ctrl-c  
 
-3.工作job
-运行job
-产生job文件，nomad init，产生example.nomad文件
-运行job，nomad run example.nomad
-检查job状态，nomad status example
-nomad alloc-status allocation-id
-修改job
-修改job文件，再执行 nomad plan example.nomad
-nomad run -check-index modify-index example.nomad
-停止job，nomad stop example
-4.集群cluster
+3.工作job  
+运行job  
+产生job文件，nomad init，产生example.nomad文件  
+运行job，nomad run example.nomad  
+检查job状态，nomad status example  
+nomad alloc-status allocation-id  
+修改job  
+修改job文件，再执行 nomad plan example.nomad  
+nomad run -check-index modify-index example.nomad  
+停止job，nomad stop example  
+4.集群cluster  
 
 ```go
 # server.hcl
@@ -107,10 +107,10 @@ advertise {
     serf = "192.168.139.204"
 }
 ```
-启动server
-nomad agent -config server.hcl
+启动server  
+nomad agent -config server.hcl  
 
-配置文件并启动agent client1
+配置文件并启动agent client1  
 ```go
 # client1.hcl
 # Increase log verbosity
@@ -145,57 +145,59 @@ advertise {
   serf = "192.168.139.204"
 }
 ```
-启动client1
-nomad agent -config client1.hcl  
+启动client1  
+nomad agent -config client1.hcl    
 
 
 
-#############consul
-echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}' >/etc/consul.d/web.json
-cat web.json |jq
+#############consul  
+echo '{"service": {"name": "web", "tags": ["rails"], "port": 80}}' >/etc/consul.d/web.json  
+cat web.json |jq  
 
 
 
 
-例子：
-两台机器
-192.168.139.207
-192.168.139.206
-先建consul集群，类似zookeeper
+例子：  
+两台机器  
+192.168.139.207  
+192.168.139.206  
+先建consul集群，类似zookeeper  
 
 [root@nomad consul.d]# cat /etc/consul.d/web.json 
+``` c
 {"service": {"name": "web", "tags": ["rails"], "port": 80}}
 
-consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind=192.168.139.207 -config-dir /etc/consul.d
+```
 
-[root@nomad nomad]# consul members
-Node   Address               Status  Type    Build  Protocol  DC
-nomad  192.168.139.207:8301  alive   server  0.6.4  2         dc1
+consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind=192.168.139.207 -config-dir /etc/consul.d  
+
+[root@nomad nomad]# consul members  
+Node   Address               Status  Type    Build  Protocol  DC  
+nomad  192.168.139.207:8301  alive   server  0.6.4  2         dc1  
 
 
-consul agent -data-dir /tmp/consul -node=agent-two -bind=192.168.139.206
+consul agent -data-dir /tmp/consul -node=agent-two -bind=192.168.139.206  
 
-[root@nomad1 nomad]# consul members
-Node       Address               Status  Type    Build  Protocol  DC
-agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1
+[root@nomad1 nomad]# consul members  
+Node       Address               Status  Type    Build  Protocol  DC  
+agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1  
+
+
+在207上  
+[root@nomad nomad]#  consul join 192.168.139.206  
+Successfully joined cluster by contacting 1 nodes.  
+[root@nomad nomad]# consul members                 
+Node       Address               Status  Type    Build  Protocol  DC  
+agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1  
+nomad      192.168.139.207:8301  alive   server  0.6.4  2         dc1  
 
 
 在207上
-[root@nomad nomad]#  consul join 192.168.139.206
-Successfully joined cluster by contacting 1 nodes.
-[root@nomad nomad]# consul members              
-Node       Address               Status  Type    Build  Protocol  DC
-agent-two  192.168.139.206:8301  alive   client  0.6.4  2         dc1
-nomad      192.168.139.207:8301  alive   server  0.6.4  2         dc1
-[root@nomad nomad]# 
 
-在207上
-
-
-
-[root@nomad nomad]# cat server.hcl 
-# Increase log verbosity
-log_level = "DEBUG"
+[root@nomad nomad]# cat server.hcl   
+```shell
+# Increase log verbosity  
+log_level = "DEBUG" 
 # Setup data dir
 data_dir = "/tmp/server1"
 # Enable the server
@@ -211,11 +213,13 @@ advertise {
     rpc  = "192.168.139.207"
     serf = "192.168.139.207"
 }
+```
 
 nomad agent -config server.hcl
 
 启动client
 [root@nomad nomad]# cat client1.hcl 
+```shell
 # client1.hcl
 # Increase log verbosity
 log_level = "DEBUG"
@@ -248,13 +252,14 @@ advertise {
   rpc = "192.168.139.207"
   serf = "192.168.139.207"
 }
-
+```
 nomad agent -config client1.hcl
 
 
 
 执行任务
 [root@nomad nomad]# cat ping.nomad 
+``` shell
 job "ping" {
   # region = "global"
   # Spread the tasks in this job between us-west-1 and us-east-1.
@@ -283,6 +288,7 @@ job "ping" {
     }
   }
 }
+```
 
 nomad run ping.nomad
 nomad status
